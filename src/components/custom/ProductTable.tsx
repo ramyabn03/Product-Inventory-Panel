@@ -69,6 +69,7 @@ export default function ProductTable({ products, isLoading }: Props) {
               </Button>
             </TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

@@ -7,7 +7,7 @@ import Pagination from "@/components/custom/Pagination";
 import { useFilterStore } from "@/store/filterStore";
 import { useProductStore } from "@/store/ProductStore";
 
-const PAGE_SIZE = 11;
+const PAGE_SIZE = 10;
 
 export default function InventoryTable() {
   const { products: localProducts, setProducts } = useProductStore();

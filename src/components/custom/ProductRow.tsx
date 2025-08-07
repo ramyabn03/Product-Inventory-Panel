@@ -2,6 +2,8 @@ import { useState, type KeyboardEvent } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { useProductStore } from "@/store/ProductStore";
+import { Button } from "../ui/button";
+import { useNavigate } from "@tanstack/react-router";
 
 interface Props {
   product: {
@@ -17,6 +19,7 @@ export default function ProductRow({ product }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [stockInput, setStockInput] = useState(product.stock.toString());
   const updateStock = useProductStore((s) => s.updateStock);
+  const navigate = useNavigate();
 
   const handleBlur = () => {
     const newStock = Number(stockInput);
@@ -59,6 +62,18 @@ export default function ProductRow({ product }: Props) {
         ) : (
           <span className="text-red-500 font-medium">Out of Stock</span>
         )}
+      </TableCell>
+      <TableCell>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            useProductStore.getState().setEditingProduct(product);
+            navigate({ to: "/products/new" });
+          }}
+        >
+          Edit
+        </Button>
       </TableCell>
     </TableRow>
   );

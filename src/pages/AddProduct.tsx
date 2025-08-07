@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useProductStore } from "@/store/ProductStore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 
@@ -29,25 +29,7 @@ const formSchema = z.object({
 
 type ProductFormData = z.infer<typeof formSchema>;
 
-const addProduct = async (data: ProductFormData) => {
-  await new Promise((res) => setTimeout(res, 1000));
-
-  const id = Math.floor(Math.random() * 1_000_000); // generate random ID
-  const product = {
-    id,
-    title: data.name,
-    category: data.category,
-    price: data.price,
-    stock: data.stock,
-    description: data.description,
-  };
-
-  // Save product to Zustand store (and persist to localStorage)
-  useProductStore.getState().addProduct(product);
-  return product;
-};
-
-function AddProduct() {
+const AddProduct = () => {
   const {
     register,
     handleSubmit,
@@ -65,37 +47,79 @@ function AddProduct() {
       description: "",
     },
   });
-  const [isAdding, setIsAdding] = useState(false);
-  const navigate = useNavigate();
 
+  const [isProcessing, setIsProcessing] = useState(false);
+  const navigate = useNavigate();
+  const { editingProduct, setEditingProduct } = useProductStore();
   const category = watch("category");
 
+  const addOrUpdateProduct = async (data: ProductFormData) => {
+    await new Promise((res) => setTimeout(res, 1000));
+
+    const id = editingProduct?.id ?? Math.floor(Math.random() * 1_000_000);
+    const product = {
+      id,
+      title: data.name,
+      category: data.category,
+      price: data.price,
+      stock: data.stock,
+      description: data.description,
+    };
+
+    const store = useProductStore.getState();
+
+    if (editingProduct) {
+      store.setProducts(
+        store.products.map((p) => (p.id === editingProduct.id ? product : p))
+      );
+    } else {
+      store.addProduct(product);
+    }
+
+    return product;
+  };
+
   const mutation = useMutation({
-    mutationFn: addProduct,
+    mutationFn: addOrUpdateProduct,
     onSuccess: () => {
-      toast.success("Product added successfully");
-      setIsAdding(false);
+      toast.success(editingProduct ? "Product updated" : "Product added");
+      setIsProcessing(false);
       reset();
+      setEditingProduct(null);
+      navigate({ to: "/products" });
     },
   });
+
+  useEffect(() => {
+    if (editingProduct) {
+      reset({
+        name: editingProduct.title,
+        category: editingProduct.category,
+        price: editingProduct.price,
+        stock: editingProduct.stock,
+        description: editingProduct.description || "",
+      });
+    }
+  }, [editingProduct, reset]);
 
   return (
     <>
       <div
-        className="cursor-pointer flex items-center"
+        className="cursor-pointer flex items-center mb-4"
         onClick={() => navigate({ to: "/products" })}
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="w-4 h-4 mr-1" />
         Back
       </div>
-      <div className="max-w-2xl mx-auto pr-6 pl-6">
+      <div className="max-w-2xl mx-auto px-6">
         <div className="bg-white dark:bg-zinc-900 shadow-xl rounded-2xl p-8 space-y-6 border border-zinc-200 dark:border-zinc-700">
           <h1 className="text-3xl font-semibold text-center text-zinc-900 dark:text-zinc-100">
-            Add New Product
+            {editingProduct ? "Edit Product" : "Add New Product"}
           </h1>
+
           <form
             onSubmit={handleSubmit((data) => {
-              setIsAdding(true);
+              setIsProcessing(true);
               mutation.mutate(data);
             })}
             className="space-y-5"
@@ -182,9 +206,15 @@ function AddProduct() {
               <Button
                 type="submit"
                 className="w-full text-base font-medium"
-                disabled={isSubmitting || isAdding}
+                disabled={isSubmitting || isProcessing}
               >
-                {isSubmitting || isAdding ? "Adding Product..." : "Add Product"}
+                {isSubmitting || isProcessing
+                  ? editingProduct
+                    ? "Updating Product..."
+                    : "Adding Product..."
+                  : editingProduct
+                  ? "Update Product"
+                  : "Add Product"}
               </Button>
             </div>
           </form>
@@ -192,6 +222,6 @@ function AddProduct() {
       </div>
     </>
   );
-}
+};
 
 export default AddProduct;

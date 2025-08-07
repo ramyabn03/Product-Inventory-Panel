@@ -7,6 +7,7 @@ export interface Product {
   category: string;
   price: number;
   stock: number;
+  description?: string;
 }
 
 interface ProductStore {
@@ -14,6 +15,8 @@ interface ProductStore {
   setProducts: (products: Product[]) => void;
   updateStock: (id: number, stock: number) => void;
   addProduct: (product: Product) => void;
+  editingProduct: Product | null;
+  setEditingProduct: (product: Product | null) => void;
 }
 
 export const useProductStore = create<ProductStore>()(
@@ -29,8 +32,10 @@ export const useProductStore = create<ProductStore>()(
         })),
       addProduct: (product) =>
         set((state) => ({
-          products: [...state.products, product],
+          products: [product, ...state.products], // add to top
         })),
+      editingProduct: null,
+      setEditingProduct: (product) => set({ editingProduct: product }),
     }),
     {
       name: "product-store", // localStorage key
