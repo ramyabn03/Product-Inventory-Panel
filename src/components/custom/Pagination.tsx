@@ -31,11 +31,11 @@ export default function Pagination({
   }
 
   return (
-    <nav className="flex justify-center mt-6 space-x-1">
+    <nav className="flex justify-end mt-6 space-x-1">
       <button
         onClick={prevPage}
         disabled={currentPage === 1}
-        className="rounded px-3 py-1 bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+        className="rounded px-3 py-1 bg-gray-100 hover:bg-gray-200 disabled:opacity-40"
       >
         Prev
       </button>
@@ -46,7 +46,7 @@ export default function Pagination({
           onClick={() => setPage(page)}
           className={`rounded px-3 py-1 ${
             page === currentPage
-              ? "bg-blue-600 text-white"
+              ? "bg-black text-white"
               : "bg-gray-200 hover:bg-gray-300"
           }`}
         >

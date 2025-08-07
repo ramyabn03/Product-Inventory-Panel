@@ -1,26 +1,64 @@
-// src/components/ProductRow.tsx
+import { useState, type KeyboardEvent } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { useProductStore } from "@/store/ProductStore";
 
-interface Product {
-  id: number;
-  title: string;
-  category: string;
-  price: number;
-  stock: number;
+interface Props {
+  product: {
+    id: number;
+    title: string;
+    category: string;
+    price: number;
+    stock: number;
+  };
 }
 
-export default function ProductRow({ product }: { product: Product }) {
+export default function ProductRow({ product }: Props) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [stockInput, setStockInput] = useState(product.stock.toString());
+  const updateStock = useProductStore((s) => s.updateStock);
+
+  const handleBlur = () => {
+    const newStock = Number(stockInput);
+    if (!isNaN(newStock)) updateStock(product.id, newStock);
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") e.currentTarget.blur();
+  };
+
   return (
-    <TableRow className="hover:bg-muted/50">
+    <TableRow>
       <TableCell>{product.title}</TableCell>
-      <TableCell>{product.category}</TableCell>
-      <TableCell>${product.price}</TableCell>
-      <TableCell>{product.stock}</TableCell>
       <TableCell>
-        <Badge variant={product.stock > 0 ? "default" : "destructive"}>
-          {product.stock > 0 ? "In Stock" : "Out of Stock"}
-        </Badge>
+        {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
+      </TableCell>
+      <TableCell>${product.price.toFixed(2)}</TableCell>
+      <TableCell
+        onClick={() => setIsEditing(true)}
+        className={cn("cursor-pointer", isEditing && "p-0")}
+      >
+        {isEditing ? (
+          <input
+            type="number"
+            className="w-full px-2 py-1 border border-gray-300 rounded"
+            value={stockInput}
+            onChange={(e) => setStockInput(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            autoFocus
+          />
+        ) : (
+          product.stock
+        )}
+      </TableCell>
+      <TableCell>
+        {product.stock > 0 ? (
+          <span className="text-green-600 font-medium">In Stock</span>
+        ) : (
+          <span className="text-red-500 font-medium">Out of Stock</span>
+        )}
       </TableCell>
     </TableRow>
   );

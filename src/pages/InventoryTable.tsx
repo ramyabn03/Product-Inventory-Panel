@@ -1,34 +1,32 @@
-// src/pages/InventoryTable.tsx
-import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Outlet } from "@tanstack/react-router";
 
 import ProductFilters from "@/components/custom/ProductFilters";
 import ProductTable from "@/components/custom/ProductTable";
 import Pagination from "@/components/custom/Pagination";
 import { useFilterStore } from "@/store/filterStore";
+import { useProductStore } from "@/store/ProductStore";
 
-const PAGE_SIZE = 10;
-
-interface Product {
-  id: number;
-  title: string;
-  category: string;
-  price: number;
-  stock: number;
-}
-
-const fetchProducts = async (): Promise<Product[]> => {
-  const res = await fetch("https://dummyjson.com/products?limit=100");
-  const data = await res.json();
-  return data.products;
-};
+const PAGE_SIZE = 11;
 
 export default function InventoryTable() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["products"],
-    queryFn: fetchProducts,
-  });
+  const { products: localProducts, setProducts } = useProductStore();
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch once on mount if not already persisted
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      const res = await fetch("https://dummyjson.com/products?limit=100");
+      const data = await res.json();
+      setProducts(data.products);
+      setIsLoading(false);
+    };
+
+    if (localProducts.length === 0) {
+      fetchProducts();
+    }
+  }, [localProducts, setProducts]);
 
   const {
     search,
@@ -42,9 +40,9 @@ export default function InventoryTable() {
   } = useFilterStore();
 
   const filteredProducts = useMemo(() => {
-    if (!data) return [];
+    if (!localProducts) return [];
 
-    let filtered = data.filter((product) =>
+    let filtered = localProducts.filter((product) =>
       product.title.toLowerCase().includes(search.toLowerCase())
     );
 
@@ -61,11 +59,11 @@ export default function InventoryTable() {
     }
 
     return filtered;
-  }, [data, search, category, sortField, sortOrder]);
+  }, [localProducts, search, category, sortField, sortOrder]);
 
   const uniqueCategories = useMemo(
-    () => Array.from(new Set(data?.map((p) => p.category))),
-    [data]
+    () => Array.from(new Set(localProducts?.map((p) => p.category))),
+    [localProducts]
   );
 
   // Calculate pagination
@@ -79,8 +77,8 @@ export default function InventoryTable() {
   return (
     <>
       <Outlet />
-      <div className="p-6 space-y-6">
-        <h1 className="text-3xl font-bold tracking-tight">Inventory</h1>
+      <div className="pr-6 pl-6 space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight">Product Inventory</h1>
 
         <ProductFilters categories={uniqueCategories} />
 
