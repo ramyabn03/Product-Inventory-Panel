@@ -18,6 +18,7 @@ import { useProductStore } from "@/store/ProductStore";
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
+import { useFilterStore } from "@/store/filterStore";
 
 const formSchema = z.object({
   name: z.string().min(1, "Product name is required"),
@@ -52,6 +53,13 @@ const AddProduct = () => {
   const navigate = useNavigate();
   const { editingProduct, setEditingProduct } = useProductStore();
   const category = watch("category");
+  const products = useProductStore((s) => s.products);
+  const { setSearch, setCategory } = useFilterStore();
+
+  // Get unique categories dynamically
+  const categories = Array.from(new Set(products.map((p) => p.category))).sort(
+    (a, b) => a.localeCompare(b)
+  );
 
   const addOrUpdateProduct = async (data: ProductFormData) => {
     await new Promise((res) => setTimeout(res, 1000));
@@ -86,6 +94,8 @@ const AddProduct = () => {
       setIsProcessing(false);
       reset();
       setEditingProduct(null);
+      setSearch("");
+      setCategory("all");
       navigate({ to: "/products" });
     },
   });
@@ -148,10 +158,11 @@ const AddProduct = () => {
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="smartphones">Smartphones</SelectItem>
-                  <SelectItem value="laptops">Laptops</SelectItem>
-                  <SelectItem value="fragrances">Fragrances</SelectItem>
-                  <SelectItem value="skincare">Skincare</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {errors.category && (
