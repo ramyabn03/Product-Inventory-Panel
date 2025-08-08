@@ -7,12 +7,13 @@ export interface Product {
   category: string;
   price: number;
   stock: number;
+  description?: string;
 }
 
 interface ProductStore {
   products: Product[];
   setProducts: (products: Product[]) => void;
-  updateStock: (id: number, stock: number) => void;
+  updateProduct: (id: number, updates: Partial<Product>) => void;
   addProduct: (product: Product) => void;
 }
 
@@ -21,19 +22,19 @@ export const useProductStore = create<ProductStore>()(
     (set) => ({
       products: [],
       setProducts: (products) => set({ products }),
-      updateStock: (id, stock) =>
+      updateProduct: (id, updates) =>
         set((state) => ({
           products: state.products.map((p) =>
-            p.id === id ? { ...p, stock } : p
+            p.id === id ? { ...p, ...updates } : p
           ),
         })),
       addProduct: (product) =>
         set((state) => ({
-          products: [...state.products, product],
+          products: [product, ...state.products], // add to top
         })),
     }),
     {
-      name: "product-store", // localStorage key
+      name: "product-store",
     }
   )
 );

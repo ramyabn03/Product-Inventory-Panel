@@ -1,4 +1,3 @@
-// src/components/ProductTable.tsx
 import {
   Table,
   TableBody,
@@ -11,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowDown, ArrowUpDown, ArrowUp } from "lucide-react";
 import { useFilterStore } from "@/store/filterStore";
+import { useState } from "react";
 import ProductRow from "./ProductRow";
 
 interface Product {
@@ -28,6 +28,7 @@ interface Props {
 
 export default function ProductTable({ products, isLoading }: Props) {
   const { sortField, sortOrder, toggleSort } = useFilterStore();
+  const [editingId, setEditingId] = useState<number | null>(null); // Track which row is being edited
 
   return (
     <div className="border shadow-sm rounded-xl overflow-hidden">
@@ -69,6 +70,7 @@ export default function ProductTable({ products, isLoading }: Props) {
               </Button>
             </TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -85,7 +87,7 @@ export default function ProductTable({ products, isLoading }: Props) {
           ) : products.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={5}
+                colSpan={6}
                 className="text-center py-6 text-muted-foreground"
               >
                 No products found.
@@ -93,7 +95,14 @@ export default function ProductTable({ products, isLoading }: Props) {
             </TableRow>
           ) : (
             products.map((product) => (
-              <ProductRow key={product.id} product={product} />
+              <ProductRow
+                key={product.id}
+                product={product}
+                isEditing={editingId === product.id}
+                onEdit={(id) => setEditingId(id)}
+                onCancel={() => setEditingId(null)}
+                onSave={() => setEditingId(null)}
+              />
             ))
           )}
         </TableBody>
