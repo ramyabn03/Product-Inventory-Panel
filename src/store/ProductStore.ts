@@ -15,6 +15,8 @@ interface ProductStore {
   setProducts: (products: Product[]) => void;
   updateProduct: (id: number, updates: Partial<Product>) => void;
   addProduct: (product: Product) => void;
+  editingProduct: Product | null;
+  setEditingProduct: (product: Product | null) => void;
 }
 
 export const useProductStore = create<ProductStore>()(
@@ -32,6 +34,8 @@ export const useProductStore = create<ProductStore>()(
         set((state) => ({
           products: [product, ...state.products], // add to top
         })),
+      editingProduct: null,
+      setEditingProduct: (product) => set({ editingProduct: product }),
     }),
     {
       name: "product-store",
